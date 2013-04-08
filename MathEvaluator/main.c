@@ -4,7 +4,7 @@
 
 int main()
 {
-    EQUATION* eq;
+    EQUATION* eq = 0;
     printf("\nResult: %d", parse_equation(eq, "(a+0.0)"));
 
     return 0;

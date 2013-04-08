@@ -1,12 +1,12 @@
 # depslib dependency file v1.0
-1365400725 source:c:\users\moshe\documents\codeblocks projects\mathevaluator\main.c
+1365463740 source:c:\users\moshe\documents\codeblocks projects\mathevaluator\main.c
 	<stdio.h>
 	<stdlib.h>
 	"MathEvaluator.h"
 
-1365400403 c:\users\moshe\documents\codeblocks projects\mathevaluator\mathevaluator.h
+1365463728 c:\users\moshe\documents\codeblocks projects\mathevaluator\mathevaluator.h
 
-1365400712 source:c:\users\moshe\documents\codeblocks projects\mathevaluator\mathevaluator.c
+1365463709 source:c:\users\moshe\documents\codeblocks projects\mathevaluator\mathevaluator.c
 	<stdio.h>
 	<stdlib.h>
 	<ctype.h>

@@ -2,12 +2,12 @@
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Debug" />
 	<File name="MathEvaluator.c" open="1" top="1" tabpos="2">
-		<Cursor position="2760" topLine="95" />
+		<Cursor position="4114" topLine="163" />
 	</File>
 	<File name="MathEvaluator.h" open="1" top="0" tabpos="3">
-		<Cursor position="105" topLine="0" />
+		<Cursor position="833" topLine="32" />
 	</File>
 	<File name="main.c" open="1" top="0" tabpos="1">
-		<Cursor position="165" topLine="0" />
+		<Cursor position="106" topLine="0" />
 	</File>
 </CodeBlocks_layout_file>

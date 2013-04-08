@@ -20,18 +20,24 @@ typedef struct equation_t
     EQUATION_STACK_NODE* first;
 } EQUATION;
 
-typedef struct vartable_t
+typedef struct vartablevalue_t
 {
     char* name;
     double value;
-    struct vartable_t* next;
+    struct vartablevalue_t* next;
+} VARTABLE_VALUE;
+
+typedef struct vartable_t
+{
+    VARTABLE_VALUE* first;
+    VARTABLE_VALUE* last;
 } VARTABLE;
 
 int parse_equation(EQUATION* eq, const char* expr);
 int free_equation(EQUATION* eq);
 
 int init_vartable(VARTABLE* vt);
-int append_vartable(VARTABLE* vt, const char* name, double value);
+int append_to_vartable(VARTABLE* vt, const char* name, double value);
 int free_vartable(VARTABLE* vt);
 
 int eval_equation(EQUATION* eq, VARTABLE* vt, double* result);
