@@ -1,7 +1,7 @@
 #ifndef MATHEVALUATOR_H_INCLUDED
 #define MATHEVALUATOR_H_INCLUDED
 
-typedef enum e_eqsignifier
+typedef enum e_eqsignifier //stored as `int`
 {
     VAR,
     CONST,
@@ -35,6 +35,7 @@ typedef struct vartable_t
 
 int parse_equation(EQUATION* eq, const char* expr);
 int free_equation(EQUATION* eq);
+void walk_eqation(EQUATION* eq);
 
 int init_vartable(VARTABLE* vt);
 int append_to_vartable(VARTABLE* vt, const char* name, double value);

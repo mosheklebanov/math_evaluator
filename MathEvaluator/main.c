@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "MathEvaluator.h"
 
 int main()
 {
-    EQUATION* eq = 0;
-    printf("\nResult: %d", parse_equation(eq, "(a+0.0)"));
-
+    EQUATION eq;
+    assert(parse_equation(&eq, "mat+(bath*76)")==0);
+    walk_eqation(&eq);
     return 0;
 }

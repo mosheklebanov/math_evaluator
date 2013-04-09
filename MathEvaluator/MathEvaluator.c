@@ -73,7 +73,9 @@ int parse_equation(EQUATION* eq, const char* expr)
             if (val1==0 && expr[i2]!=0)
             {
                 n->s = VAR;
-                n->eq_pointer = strdup(expr+i2);
+                n->eq_pointer = malloc(i-i2+1);
+                memcpy(n->eq_pointer, expr+i2, i-i2);
+                *(char*)(n->eq_pointer+(i-i2)) = 0; //set null-terminator
             }
             else
             {
@@ -87,8 +89,13 @@ int parse_equation(EQUATION* eq, const char* expr)
             //load val2
             if (val2==0 && expr[i+1]!=0)
             {
+                int i3 = i;
+                while (isalnum(expr[i3+1]))
+                    i3++;
                 n->s = VAR;
-                n->eq_pointer = strdup(expr+i+1);
+                n->eq_pointer = malloc(i3-i+1);
+                memcpy(n->eq_pointer, expr+i+1, i3-i);
+                *(char*)(n->eq_pointer+(i3-i)) = 0; //set null-terminator
             }
             else
             {
@@ -125,6 +132,31 @@ int free_equation(EQUATION* eq)
         i = j;
     }
     return 0;
+}
+
+/* DEBUG */
+void walk_eqation(EQUATION* eq)
+{
+    printf("--\n");
+    EQUATION_STACK_NODE* n = eq->first;
+    while (n->next)
+    {
+        switch (n->s)
+        {
+            case VAR:
+            printf("VAR \t%s\n", (char*)n->eq_pointer);
+            break;
+            case CONST:
+            printf("CONST \t%f\n", *(double*)n->eq_pointer);
+            case OP:
+            printf("OP \t%s\n", (char*)n->eq_pointer);
+            break;
+            default:
+            printf("---- Faulty element ----");
+        }
+        n = n->next;
+    }
+    printf("--\n");
 }
 
 int init_vartable(VARTABLE* vt)
