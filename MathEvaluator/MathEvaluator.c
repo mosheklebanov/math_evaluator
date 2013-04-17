@@ -4,6 +4,10 @@
 #include <string.h>
 #include "MathEvaluator.h"
 
+//pre-processor constant TRACE_ACTIVE causes debugging data to the printed to the screen
+//if and only if TRACE_ACTIVE evaluates to true
+#define TRACE_ACTIVE 1
+
 #define IS_OPERATOR(c) ((c)=='+' || (c)=='-' || (c)=='*' || (c)=='/')
 
 const static char* OP_ADDITION       = "+";
@@ -27,14 +31,21 @@ void* get_operator_void_ptr(char op)
 
 int parse_equation(EQUATION* eq, const char* expr)
 {
+    #if (TRACE_ACTIVE)
+        printf("(TRACEINFO) Evaluation Query: '%s'\n\n", expr);
+    #endif
+
+    //allocate the first node
     EQUATION_STACK_NODE* n = malloc(sizeof(EQUATION_STACK_NODE));
     eq->first = n;
 
+    //set variables for paranthesis scan
     int open_par = 0;
     int close_par = 0;
 
     int i;
 
+    //get max level
     for (i=0; expr[i]; i++)
     {
         if (expr[i]=='(')
@@ -43,77 +54,140 @@ int parse_equation(EQUATION* eq, const char* expr)
             close_par++;
     }
 
+    #if (TRACE_ACTIVE)
+        printf("(TRACEINFO) Finished equation parsing.\n\tOpen parantheses: %d\n\tClosed parantheses: %d\n", open_par, close_par);
+    #endif
+    //die if the # of open paranthesis doesn't match the # of closed ones
     if (open_par!=close_par)
         return -1;
 
-    int level = 0;
+    //treat open_par as the current max level, level as the current level in the inner loop
+    int level;
 
-    for (i=0; expr[i]; i++)
+    while(open_par>=0)
     {
-        if (expr[i]=='(')
-            level++;
-        else if (expr[i]==')')
-            level--;
+        #if (TRACE_ACTIVE)
+            printf("(TRACEINFO) Initiating within outer loop, max level %d\n", open_par);
+        #endif
+        level = 0; //reset level
 
-        if (level==open_par && IS_OPERATOR(expr[i]))
+        for (i=0; expr[i]; i++)
         {
-            // breakpoint
-            printf("At position %d\n", i);
-            int i2 = i;
-            while (isalnum(expr[i2-1]))
-                i2--;
+            if (expr[i]=='(')
+                level++;
+            else if (expr[i]==')')
+                level--;
 
-            double val1 = atof(expr+i2);
-            double val2 = atof(expr+i+1);
-
-            /* printf("%f %f\n", atof(expr+i2), atof(expr+i+1));
-            printf("%d %d\n", expr[i2]=='0', expr[i+1]=='0'); */
-
-            //load val1
-            if (val1==0 && expr[i2]!=0)
+            if (level>open_par+1) //anything past this point has already been processed
             {
-                n->s = VAR;
-                n->eq_pointer = malloc(i-i2+1);
-                memcpy(n->eq_pointer, expr+i2, i-i2);
-                *(char*)(n->eq_pointer+(i-i2)) = 0; //set null-terminator
+                #if (TRACE_ACTIVE)
+                    printf("(TRACEINFO) Character reached '%c' position %d, exiting inner loop\n", expr[i], i);
+                #endif
+                break;
             }
-            else
+            else if (level==open_par && IS_OPERATOR(expr[i])) //if we're at the maximum allowed level
             {
-                n->s = CONST;
-                n->eq_pointer = malloc(sizeof(double));
-                *(double*)(n->eq_pointer) = val1;
-            }
-            n->next = malloc(sizeof(EQUATION_STACK_NODE));
-            n = n->next;
+                #if (TRACE_ACTIVE)
+                    printf("(TRACEINFO) At common level %d position %d character %c, storing operation\n", level, i, expr[i]);
+                #endif
+                // breakpoint
 
-            //load val2
-            if (val2==0 && expr[i+1]!=0)
-            {
-                int i3 = i;
-                while (isalnum(expr[i3+1]))
-                    i3++;
-                n->s = VAR;
-                n->eq_pointer = malloc(i3-i+1);
-                memcpy(n->eq_pointer, expr+i+1, i3-i);
-                *(char*)(n->eq_pointer+(i3-i)) = 0; //set null-terminator
-            }
-            else
-            {
-                n->s = CONST;
-                n->eq_pointer = malloc(sizeof(double));
-                *(double*)(n->eq_pointer) = val2;
-            }
-            n->next = malloc(sizeof(EQUATION_STACK_NODE));
-            n = n->next;
+                int i2 = i;
+                while (isalnum(expr[i2-1]))
+                    i2--;
 
-            //load operator
-            n->s = OP;
-            n->eq_pointer = get_operator_void_ptr(expr[i]);
-            n->next = malloc(sizeof(EQUATION_STACK_NODE));
-            n = n->next;
-            n->next = 0;
-        }
-    }
+                double val1 = atof(expr+i2);
+                double val2 = atof(expr+i+1);
+
+                //load val1 when appropraite
+                if (expr[i2]==')')
+                {
+                    #if (TRACE_ACTIVE)
+                        printf("(TRACEINFO) In-parantheses expression at position %d excluded from tree (will be inferred)\n", i2);
+                    #endif
+                    //do nothing
+                }
+                else if (val1==0 && expr[i2]!=0)
+                {
+                    #if (TRACE_ACTIVE)
+                        printf("(TRACEINFO) Loading from position %d as VAR\n", i2);
+                    #endif
+                    n->s = VAR;
+                    n->eq_pointer = malloc(i-i2+1);
+                    memcpy(n->eq_pointer, expr+i2, i-i2);
+                    *(char*)(n->eq_pointer+(i-i2)) = 0; //set null-terminator
+
+                    //prepare for next element
+                    n->next = malloc(sizeof(EQUATION_STACK_NODE));
+                    n = n->next;
+                }
+                else
+                {
+                    #if (TRACE_ACTIVE)
+                        printf("(TRACEINFO) Loading from position %d as CONST\n", i2);
+                    #endif
+                    n->s = CONST;
+                    n->eq_pointer = malloc(sizeof(double));
+                    *(double*)(n->eq_pointer) = val1;
+
+                    //prepare for next element
+                    n->next = malloc(sizeof(EQUATION_STACK_NODE));
+                    n = n->next;
+                }
+
+                //load val2 when appropriate
+                if (expr[i+1]=='(')
+                {
+                    #if (TRACE_ACTIVE)
+                        printf("(TRACEINFO) In-parantheses expression at position %d excluded from tree (will be inferred)\n", i+1);
+                    #endif
+                    //do nothing
+                }
+                else if (val2==0 && expr[i+1]!=0)
+                {
+                    #if (TRACE_ACTIVE)
+                        printf("(TRACEINFO) Loading from position %d as VAR\n", i+1);
+                    #endif
+                    int i3 = i;
+                    while (isalnum(expr[i3+1]))
+                        i3++;
+                    n->s = VAR;
+                    n->eq_pointer = malloc(i3-i+1);
+                    memcpy(n->eq_pointer, expr+i+1, i3-i);
+                    *(char*)(n->eq_pointer+(i3-i)) = 0; //set null-terminator
+
+                    //prepare for next element
+                    n->next = malloc(sizeof(EQUATION_STACK_NODE));
+                    n = n->next;
+                }
+                else
+                {
+                    #if (TRACE_ACTIVE)
+                        printf("(TRACEINFO) Loading from position %d as CONST\n", i+1);
+                    #endif
+                    n->s = CONST;
+                    n->eq_pointer = malloc(sizeof(double));
+                    *(double*)(n->eq_pointer) = val2;
+
+                    //prepare for next element
+                    n->next = malloc(sizeof(EQUATION_STACK_NODE));
+                    n = n->next;
+                }
+
+                //load operator
+                #if (TRACE_ACTIVE)
+                    printf("(TRACEINFO) Loading operator %c from position %d\n", expr[i], i);
+                #endif
+                n->s = OP;
+                n->eq_pointer = get_operator_void_ptr(expr[i]);
+                n->next = malloc(sizeof(EQUATION_STACK_NODE));
+                n = n->next;
+                n->next = 0;
+            } //end last if
+
+        } //end inner loop
+        open_par--;
+    } //end outer loop
 
     return 0;
 }
@@ -137,6 +211,7 @@ int free_equation(EQUATION* eq)
 /* DEBUG */
 void walk_eqation(EQUATION* eq)
 {
+    int element = 0;
     printf("--\n");
     EQUATION_STACK_NODE* n = eq->first;
     while (n->next)
@@ -144,12 +219,13 @@ void walk_eqation(EQUATION* eq)
         switch (n->s)
         {
             case VAR:
-            printf("VAR \t%s\n", (char*)n->eq_pointer);
+            printf("[%d]VAR \t%s\n", ++element, (char*)n->eq_pointer);
             break;
             case CONST:
-            printf("CONST \t%f\n", *(double*)n->eq_pointer);
+            printf("[%d]CONST \t%f\n", ++element, *(double*)n->eq_pointer);
+            break;
             case OP:
-            printf("OP \t%s\n", (char*)n->eq_pointer);
+            printf("[%d]OP \t\t%s\n", ++element, (char*)n->eq_pointer);
             break;
             default:
             printf("---- Faulty element ----");
